@@ -16,6 +16,26 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Custom Middleware to verify JWT Token
+const verifyToken = (req, res, next) => {
+    const token = req.cookies?.token;
+
+    // If token is not present in cookies
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized access' });
+    }
+
+    // Verify the token using jwt.verify(token, secret)
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'Unauthorized access' });
+        }
+        // If token is valid, attach decoded user information to the request object
+        req.user = decoded;
+        next(); // Move to the next route handler or middleware
+    });
+};
+
 // MongoDB Connection URI from environment variables
 const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri, {
